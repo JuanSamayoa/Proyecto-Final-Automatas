@@ -1,0 +1,23 @@
+# Archivos compilados
+*.class
+build/
+dist/
+
+# Configuración específica de NetBeans
+nbproject/private/
+nbproject/build-impl.xml
+nbproject/genfiles.properties
+
+# Archivos temporales
+*.tmp
+*.bak
+*~
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

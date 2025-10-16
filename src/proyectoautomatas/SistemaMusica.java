@@ -198,6 +198,10 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     // EVENTOS DE INTERFAZ
 
+    /**
+     * Maneja el evento de cargar archivo desde el selector de archivos
+     * Verifica que no haya reproducción en curso antes de proceder
+     */
     private void accionCargarArchivo(ActionEvent evento) {
         if (reproduciendo) {
             JOptionPane.showMessageDialog(this,
@@ -244,6 +248,9 @@ public class SistemaMusica extends javax.swing.JFrame {
         return contenido.toString().trim();
     }
 
+    /**
+     * Maneja el evento de usar el ejemplo predefinido incluido en el proyecto
+     */
     private void accionUsarEjemplo(ActionEvent evento) {
         if (reproduciendo) {
             JOptionPane.showMessageDialog(this,
@@ -263,6 +270,9 @@ public class SistemaMusica extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Maneja el evento de detener la reproducción musical actual
+     */
     private void accionDetenerMusica(ActionEvent evento) {
         if (reproduciendo) {
             detenerSolicitado = true;
@@ -283,6 +293,9 @@ public class SistemaMusica extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Maneja el evento de mostrar la ayuda del sistema
+     */
     private void accionMostrarAyuda(ActionEvent evento) {
         String ayuda = "Sistema Musical Accesible - Guia de Uso\n\n" +
                 "Formato de partituras:\n" +
@@ -303,6 +316,10 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     // PROCESAMIENTO MUSICAL
 
+    /**
+     * Procesa un archivo musical seleccionado por el usuario
+     * Lee el contenido y lo pasa al procesamiento de texto
+     */
     private void procesarArchivoMusical(File archivo) {
         try {
             StringBuilder contenido = new StringBuilder();
@@ -323,6 +340,10 @@ public class SistemaMusica extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Procesa el texto musical completo, realiza el análisis y muestra resultados
+     * Coordina el análisis léxico, la generación de reportes y la reproducción
+     */
     private void procesarTextoMusical(String textoMusical, String nombreFuente) {
         try {
             actualizarEstado("Analizando partitura...");
@@ -405,6 +426,10 @@ public class SistemaMusica extends javax.swing.JFrame {
         areaResultados.setText(reporte.toString());
     }
 
+    /**
+     * Inicia la reproducción musical en un hilo separado para no bloquear la
+     * interfaz
+     */
     private void iniciarReproduccionMusical(ResultadoAnalisis resultado) {
         hiloReproduccion = new Thread(() -> {
             try {
@@ -439,6 +464,10 @@ public class SistemaMusica extends javax.swing.JFrame {
         hiloReproduccion.start();
     }
 
+    /**
+     * Ejecuta la reproducción completa de la partitura párrafo por párrafo
+     * Incluye pausas entre párrafos para una mejor experiencia auditiva
+     */
     private void reproducirPartituraCompleta(ResultadoAnalisis resultado) throws InterruptedException {
         SwingUtilities.invokeLater(() -> areaResultados.append("\n\nComenzando la experiencia musical!\n"));
 
@@ -497,6 +526,9 @@ public class SistemaMusica extends javax.swing.JFrame {
             inicializarFrecuencias();
         }
 
+        /**
+         * Inicializa las frecuencias base de las notas musicales en la octava media
+         */
         private void inicializarFrecuencias() {
             // Octava media (4ta octava)
             frecuenciasBase.put("DO", 261.63);
@@ -609,6 +641,10 @@ public class SistemaMusica extends javax.swing.JFrame {
             }
         }
 
+        /**
+         * Genera una onda sinusoidal con envolvente ADSR para crear sonido natural
+         * Utiliza síntesis aditiva con frecuencia específica y duración determinada
+         */
         private void generarOnda(double frecuencia, int duracionMs) {
             int muestrasTotal = (int) (44100 * duracionMs / 1000.0);
             byte[] buffer = new byte[muestrasTotal * 2]; // 16-bit = 2 bytes por muestra
