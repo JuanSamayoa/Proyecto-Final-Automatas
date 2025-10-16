@@ -28,7 +28,9 @@ public class SistemaMusica extends javax.swing.JFrame {
     private JTextArea areaResultados;
     private JScrollPane panelScroll;
     private JButton btnCargarArchivo;
+    private JButton btnAbrirArchivo;
     private JButton btnDetener;
+    private JButton btnDetener2;
     private JButton btnEjemplo;
     private JButton btnAyuda;
     private JLabel lblEstado;
@@ -45,6 +47,7 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     /**
      * Constructor principal del sistema musical
+     * Inicializa los componentes del motor musical y configura la interfaz
      */
     public SistemaMusica() {
         // Inicializar los componentes del motor musical
@@ -66,6 +69,7 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     /**
      * Configura la interfaz gráfica con un diseño accesible y simple
+     * Crea el área de texto, paneles y botones
      */
     private void inicializarInterfaz() {
         setSize(1000, 700);
@@ -84,14 +88,13 @@ public class SistemaMusica extends javax.swing.JFrame {
         panelScroll.setBorder(BorderFactory.createTitledBorder("Análisis Musical"));
         add(panelScroll, BorderLayout.CENTER);
 
+        // Inicializar etiqueta de estado
+        lblEstado = new JLabel("Sistema listo. Carga un archivo o usa el ejemplo incluido");
+        lblEstado.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
         // Panel de controles
         JPanel panelControles = crearPanelControles();
         add(panelControles, BorderLayout.SOUTH);
-
-        // Barra de estado
-        lblEstado = new JLabel("Sistema listo. Carga un archivo o usa el ejemplo incluido");
-        lblEstado.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        add(lblEstado, BorderLayout.PAGE_END);
     }
 
     private JPanel crearPanelSuperior() {
@@ -116,12 +119,24 @@ public class SistemaMusica extends javax.swing.JFrame {
         areaResultados.setWrapStyleWord(true);
     }
 
+    /**
+     * Crea el panel de controles con botones para interactuar con el sistema
+     * Incluye botones para cargar archivo, abrir archivo, ejemplo, detener y ayuda
+     */
     private JPanel crearPanelControles() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        JPanel panelPrincipal = new JPanel();
+        panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
+
+        // Subpanel para los botones
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
 
         // Botón para cargar archivo
         btnCargarArchivo = crearBotonSimple("Cargar Partitura", "Selecciona un archivo con notas musicales");
         btnCargarArchivo.addActionListener(this::accionCargarArchivo);
+
+        // Botón adicional para abrir archivo
+        btnAbrirArchivo = crearBotonSimple("Abrir Partitura", "Abrir archivo de partitura musical");
+        btnAbrirArchivo.addActionListener(this::accionCargarArchivo);
 
         // Botón para ejemplo predefinido
         btnEjemplo = crearBotonSimple("Usar Ejemplo", "Reproduce el ejemplo incluido");
@@ -132,16 +147,31 @@ public class SistemaMusica extends javax.swing.JFrame {
         btnDetener.addActionListener(this::accionDetenerMusica);
         btnDetener.setEnabled(false);
 
+        // Botón adicional para detener reproducción
+        btnDetener2 = crearBotonSimple("Detener Reproducción", "Detiene la reproducción de música");
+        btnDetener2.addActionListener(this::accionDetenerMusica);
+        btnDetener2.setEnabled(false);
+
         // Botón de ayuda
         btnAyuda = crearBotonSimple("Ayuda", "Información sobre el sistema");
         btnAyuda.addActionListener(this::accionMostrarAyuda);
 
-        panel.add(btnCargarArchivo);
-        panel.add(btnEjemplo);
-        panel.add(btnDetener);
-        panel.add(btnAyuda);
+        panelBotones.add(btnCargarArchivo);
+        panelBotones.add(btnAbrirArchivo);
+        panelBotones.add(btnEjemplo);
+        panelBotones.add(btnDetener);
+        panelBotones.add(btnDetener2);
+        panelBotones.add(btnAyuda);
 
-        return panel;
+        // Añadir el subpanel de botones
+        panelPrincipal.add(panelBotones);
+
+        // Añadir la etiqueta de estado
+        lblEstado.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelPrincipal.add(Box.createVerticalStrut(10)); // Espacio
+        panelPrincipal.add(lblEstado);
+
+        return panelPrincipal;
     }
 
     private JButton crearBotonSimple(String texto, String tooltip) {
@@ -287,6 +317,7 @@ public class SistemaMusica extends javax.swing.JFrame {
                 btnCargarArchivo.setEnabled(true);
                 btnEjemplo.setEnabled(true);
                 btnDetener.setEnabled(false);
+                btnDetener2.setEnabled(false);
                 areaResultados.append("\n\nReproducción detenida por el usuario");
                 actualizarEstado("Reproducción detenida");
             });
@@ -440,6 +471,7 @@ public class SistemaMusica extends javax.swing.JFrame {
                     btnCargarArchivo.setEnabled(false);
                     btnEjemplo.setEnabled(false);
                     btnDetener.setEnabled(true);
+                    btnDetener2.setEnabled(true);
                     actualizarEstado("Reproduciendo...");
                 });
 
@@ -456,6 +488,7 @@ public class SistemaMusica extends javax.swing.JFrame {
                     btnCargarArchivo.setEnabled(true);
                     btnEjemplo.setEnabled(true);
                     btnDetener.setEnabled(false);
+                    btnDetener2.setEnabled(false);
                     actualizarEstado("Reproduccion completada");
                 });
             }
@@ -512,6 +545,10 @@ public class SistemaMusica extends javax.swing.JFrame {
     /**
      * Maneja las reglas gramaticales para el análisis de notas musicales
      */
+    /**
+     * Clase que define la gramática musical y frecuencias de notas
+     * Contiene patrones regex para reconocer notas y mapa de frecuencias
+     */
     private static class GramaticaMusical {
         // Expresión regular principal para reconocer notas musicales
         private final Pattern patronNota = Pattern.compile(
@@ -566,6 +603,10 @@ public class SistemaMusica extends javax.swing.JFrame {
     /**
      * Analizador sintáctico que procesa texto musical y crea estructuras de datos
      */
+    /**
+     * Clase que analiza el texto musical usando la gramática
+     * Procesa líneas, extrae notas y cuenta ocurrencias
+     */
     private static class AnalizadorMusical {
         private final GramaticaMusical gramatica;
 
@@ -576,9 +617,10 @@ public class SistemaMusica extends javax.swing.JFrame {
         public ResultadoAnalisis analizarTexto(String texto) {
             List<List<String>> parrafos = new ArrayList<>();
             List<Map<String, Integer>> conteosParrafos = new ArrayList<>();
-            String[] lineasTexto = texto.split("\n");
+            StringTokenizer lineasTexto = new StringTokenizer(texto, "\n");
 
-            for (String linea : lineasTexto) {
+            while (lineasTexto.hasMoreTokens()) {
+                String linea = lineasTexto.nextToken();
                 if (linea.trim().isEmpty())
                     continue;
 
@@ -607,6 +649,10 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     /**
      * Genera audio sintético para las notas musicales
+     */
+    /**
+     * Clase que genera sonido sintético para las notas musicales
+     * Usa Java Sound API para crear ondas sinusoidales
      */
     private static class GeneradorSonido {
         private SourceDataLine lineaAudio;
@@ -731,8 +777,9 @@ public class SistemaMusica extends javax.swing.JFrame {
 
     /**
      * Punto de entrada principal del programa
+     * Configura la apariencia y lanza la ventana principal
      */
-    public static void main(String[] args) {
+    public static void main(String... args) {
         // Configurar look and feel del sistema
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
