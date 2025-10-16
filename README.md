@@ -204,6 +204,3 @@ Este proyecto fue desarrollado como trabajo académico para el curso de Autómat
 - **Estándares Musicales**: Por las frecuencias y notación universal
 
 ---
-
-_Transformando teoría en música, un token a la vez._</content>
-<parameter name="filePath">c:\Users\Juan\Documents\NetBeansProjects\ProyectoAutomatas\README.md
