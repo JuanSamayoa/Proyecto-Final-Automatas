@@ -12,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.*;
-import java.util.List;
 import java.util.regex.*;
 
 /**
@@ -406,51 +405,76 @@ public class SistemaMusica extends javax.swing.JFrame {
         reporte.append("Analisis realizado: ").append(new Date()).append("\n");
         reporte.append("Motor: Analizador Sintactico v2.0\n\n");
 
-        // Análisis por párrafos
-        List<List<String>> parrafos = resultado.getParrafos();
+        // Análisis por párrafos usando nodos enlazados
         Map<String, Integer> conteoGlobal = resultado.getConteoGlobal();
+        NodoParrafo parrafoActual = resultado.getPrimerParrafo();
+        int numeroParrafo = 1;
 
-        for (int i = 0; i < parrafos.size(); i++) {
-            List<String> parrafo = parrafos.get(i);
-            reporte.append("PARRAFO ").append(i + 1).append("\n");
+        while (parrafoActual != null) {
+            reporte.append("PARRAFO ").append(numeroParrafo).append("\n");
             reporte.append("─".repeat(40)).append("\n");
-            reporte.append("Contenido: ").append(String.join(" ", parrafo)).append("\n");
-            reporte.append("Total de notas: ").append(parrafo.size()).append("\n");
+            reporte.append("Contenido: ").append(parrafoActual.obtenerNotasComoTexto()).append("\n");
+            reporte.append("Total de notas: ").append(parrafoActual.totalNotas).append("\n");
             reporte.append("Distribucion por tipo:\n");
 
-            // Calcular conteo por párrafo
-            Map<String, Integer> conteo = new HashMap<>();
-            for (String nota : parrafo) {
-                conteo.put(nota, conteo.getOrDefault(nota, 0) + 1);
+            // Ordenar conteo manualmente sin streams
+            Map<String, Integer> conteo = parrafoActual.conteo;
+            String[] notas = conteo.keySet().toArray(new String[0]);
+
+            // Ordenamiento simple por cantidad (burbuja)
+            for (int i = 0; i < notas.length - 1; i++) {
+                for (int j = 0; j < notas.length - i - 1; j++) {
+                    if (conteo.get(notas[j]) < conteo.get(notas[j + 1])) {
+                        String temp = notas[j];
+                        notas[j] = notas[j + 1];
+                        notas[j + 1] = temp;
+                    }
+                }
             }
 
-            conteo.entrySet().stream()
-                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                    .forEach(entrada -> reporte.append("   ").append(entrada.getKey())
-                            .append(": ").append(entrada.getValue())
-                            .append(" vez").append(entrada.getValue() > 1 ? "es" : "")
-                            .append("\n"));
+            for (String nota : notas) {
+                int cantidad = conteo.get(nota);
+                reporte.append("   ").append(nota)
+                        .append(": ").append(cantidad)
+                        .append(" vez").append(cantidad > 1 ? "es" : "")
+                        .append("\n");
+            }
             reporte.append("\n");
+
+            parrafoActual = parrafoActual.siguiente;
+            numeroParrafo++;
         }
 
         // Resumen global
         reporte.append("RESUMEN GLOBAL\n");
         reporte.append("=".repeat(40)).append("\n");
-        reporte.append("Total de parrafos musicales: ").append(parrafos.size()).append("\n");
-
-        int totalNotas = parrafos.stream().mapToInt(List::size).sum();
-        reporte.append("Total de notas analizadas: ").append(totalNotas).append("\n");
+        reporte.append("Total de parrafos musicales: ").append(resultado.getTotalParrafos()).append("\n");
+        reporte.append("Total de notas analizadas: ").append(resultado.getTotalNotas()).append("\n");
         reporte.append("Notas unicas encontradas: ").append(conteoGlobal.size()).append("\n\n");
 
         reporte.append("RANKING DE NOTAS MAS FRECUENTES:\n");
-        conteoGlobal.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(5)
-                .forEach(entrada -> {
-                    double porcentaje = (entrada.getValue() * 100.0) / totalNotas;
-                    reporte.append(String.format("   %s: %d apariciones (%.1f%%)\n",
-                            entrada.getKey(), entrada.getValue(), porcentaje));
-                });
+
+        // Ordenar notas globales manualmente
+        String[] notasGlobales = conteoGlobal.keySet().toArray(new String[0]);
+        for (int i = 0; i < notasGlobales.length - 1; i++) {
+            for (int j = 0; j < notasGlobales.length - i - 1; j++) {
+                if (conteoGlobal.get(notasGlobales[j]) < conteoGlobal.get(notasGlobales[j + 1])) {
+                    String temp = notasGlobales[j];
+                    notasGlobales[j] = notasGlobales[j + 1];
+                    notasGlobales[j + 1] = temp;
+                }
+            }
+        }
+
+        // Mostrar top 5
+        int limite = Math.min(5, notasGlobales.length);
+        for (int i = 0; i < limite; i++) {
+            String nota = notasGlobales[i];
+            int cantidad = conteoGlobal.get(nota);
+            double porcentaje = (cantidad * 100.0) / resultado.getTotalNotas();
+            reporte.append(String.format("   %s: %d apariciones (%.1f%%)\n",
+                    nota, cantidad, porcentaje));
+        }
 
         reporte.append("\nPreparando reproduccion musical...");
 
@@ -500,34 +524,38 @@ public class SistemaMusica extends javax.swing.JFrame {
     /**
      * Ejecuta la reproducción completa de la partitura párrafo por párrafo
      * Incluye pausas entre párrafos para una mejor experiencia auditiva
+     * Usa estructura enlazada sin listas
      */
     private void reproducirPartituraCompleta(ResultadoAnalisis resultado) throws InterruptedException {
         SwingUtilities.invokeLater(() -> areaResultados.append("\n\nComenzando la experiencia musical!\n"));
 
-        List<List<String>> parrafos = resultado.getParrafos();
-        for (int i = 0; i < parrafos.size() && !detenerSolicitado; i++) {
-            List<String> parrafo = parrafos.get(i);
+        NodoParrafo parrafoActual = resultado.getPrimerParrafo();
+        int numeroParrafo = 1;
+        int totalParrafos = resultado.getTotalParrafos();
 
-            final int numeroParrafo = i + 1;
+        while (parrafoActual != null && !detenerSolicitado) {
+            final int numActual = numeroParrafo;
             SwingUtilities.invokeLater(() -> {
                 areaResultados.append(String.format("\nReproduciendo parrafo %d de %d...\n",
-                        numeroParrafo, parrafos.size()));
-                actualizarEstado(String.format("Parrafo %d/%d", numeroParrafo, parrafos.size()));
+                        numActual, totalParrafos));
+                actualizarEstado(String.format("Parrafo %d/%d", numActual, totalParrafos));
             });
 
-            // Reproducir cada nota del párrafo
-            for (String nota : parrafo) {
-                if (detenerSolicitado)
-                    break;
-
-                generadorSonido.reproducirNota(nota, 500);
+            // Reproducir cada nota del párrafo usando nodos enlazados
+            NodoNota notaActual = parrafoActual.primeraNota;
+            while (notaActual != null && !detenerSolicitado) {
+                generadorSonido.reproducirNota(notaActual.nota, 500);
                 Thread.sleep(200); // Pausa entre notas
+                notaActual = notaActual.siguiente;
             }
 
             // Pausa entre párrafos (si no es el último)
-            if (i < parrafos.size() - 1 && !detenerSolicitado) {
+            if (parrafoActual.siguiente != null && !detenerSolicitado) {
                 Thread.sleep(800);
             }
+
+            parrafoActual = parrafoActual.siguiente;
+            numeroParrafo++;
         }
 
         if (!detenerSolicitado) {
@@ -601,11 +629,69 @@ public class SistemaMusica extends javax.swing.JFrame {
     }
 
     /**
-     * Analizador sintáctico que procesa texto musical y crea estructuras de datos
+     * Nodo para crear una estructura de lista enlazada de notas
      */
+    private static class NodoNota {
+        String nota;
+        NodoNota siguiente;
+
+        public NodoNota(String nota) {
+            this.nota = nota;
+            this.siguiente = null;
+        }
+    }
+
     /**
-     * Clase que analiza el texto musical usando la gramática
-     * Procesa líneas, extrae notas y cuenta ocurrencias
+     * Nodo para crear una estructura de lista enlazada de párrafos
+     */
+    private static class NodoParrafo {
+        NodoNota primeraNota;
+        NodoNota ultimaNota;
+        Map<String, Integer> conteo;
+        int totalNotas;
+        NodoParrafo siguiente;
+
+        public NodoParrafo() {
+            this.primeraNota = null;
+            this.ultimaNota = null;
+            this.conteo = new HashMap<>();
+            this.totalNotas = 0;
+            this.siguiente = null;
+        }
+
+        public void agregarNota(String nota) {
+            NodoNota nuevoNodo = new NodoNota(nota);
+            if (primeraNota == null) {
+                primeraNota = nuevoNodo;
+                ultimaNota = nuevoNodo;
+            } else {
+                ultimaNota.siguiente = nuevoNodo;
+                ultimaNota = nuevoNodo;
+            }
+
+            // Contar por tipo de nota (sin modificadores)
+            String notaBase = nota.replaceAll("['#]", "");
+            conteo.put(notaBase, conteo.getOrDefault(notaBase, 0) + 1);
+            totalNotas++;
+        }
+
+        public String obtenerNotasComoTexto() {
+            StringBuilder sb = new StringBuilder();
+            NodoNota actual = primeraNota;
+            while (actual != null) {
+                sb.append(actual.nota);
+                if (actual.siguiente != null) {
+                    sb.append(" ");
+                }
+                actual = actual.siguiente;
+            }
+            return sb.toString();
+        }
+    }
+
+    /**
+     * Analizador sintáctico que procesa texto musical usando estructuras enlazadas
+     * No utiliza listas ni arrays, solo nodos enlazados manualmente
      */
     private static class AnalizadorMusical {
         private final GramaticaMusical gramatica;
@@ -615,8 +701,10 @@ public class SistemaMusica extends javax.swing.JFrame {
         }
 
         public ResultadoAnalisis analizarTexto(String texto) {
-            List<List<String>> parrafos = new ArrayList<>();
-            List<Map<String, Integer>> conteosParrafos = new ArrayList<>();
+            NodoParrafo primerParrafo = null;
+            NodoParrafo ultimoParrafo = null;
+            int contadorParrafos = 0;
+
             StringTokenizer lineasTexto = new StringTokenizer(texto, "\n");
 
             while (lineasTexto.hasMoreTokens()) {
@@ -624,26 +712,27 @@ public class SistemaMusica extends javax.swing.JFrame {
                 if (linea.trim().isEmpty())
                     continue;
 
-                List<String> notasParrafo = new ArrayList<>();
-                Map<String, Integer> conteoParrafo = new HashMap<>();
+                NodoParrafo parrafoActual = new NodoParrafo();
                 Matcher matcher = gramatica.getPatronNota().matcher(linea.trim());
 
                 while (matcher.find()) {
                     String notaCompleta = matcher.group().toUpperCase();
-                    notasParrafo.add(notaCompleta);
-
-                    // Contar por tipo de nota (sin modificadores)
-                    String notaBase = notaCompleta.replaceAll("['#]", "");
-                    conteoParrafo.put(notaBase, conteoParrafo.getOrDefault(notaBase, 0) + 1);
+                    parrafoActual.agregarNota(notaCompleta);
                 }
 
-                if (!notasParrafo.isEmpty()) {
-                    parrafos.add(notasParrafo);
-                    conteosParrafos.add(conteoParrafo);
+                if (parrafoActual.totalNotas > 0) {
+                    if (primerParrafo == null) {
+                        primerParrafo = parrafoActual;
+                        ultimoParrafo = parrafoActual;
+                    } else {
+                        ultimoParrafo.siguiente = parrafoActual;
+                        ultimoParrafo = parrafoActual;
+                    }
+                    contadorParrafos++;
                 }
             }
 
-            return new ResultadoAnalisis(parrafos, conteosParrafos);
+            return new ResultadoAnalisis(primerParrafo, contadorParrafos);
         }
     }
 
@@ -734,36 +823,41 @@ public class SistemaMusica extends javax.swing.JFrame {
     }
 
     /**
-     * Resultado del análisis musical
+     * Resultado del análisis musical usando estructura enlazada
+     * No usa listas, solo nodos enlazados
      */
     private static class ResultadoAnalisis {
-        private final List<List<String>> parrafos;
-        private final List<Map<String, Integer>> conteosParrafos;
+        private final NodoParrafo primerParrafo;
+        private final int totalParrafos;
         private final Map<String, Integer> conteoGlobal;
-        private final int totalNotas;
+        private int totalNotas;
 
-        public ResultadoAnalisis(List<List<String>> parrafos, List<Map<String, Integer>> conteosParrafos) {
-            this.parrafos = parrafos;
-            this.conteosParrafos = conteosParrafos;
-
-            // Calcular estadísticas globales
+        public ResultadoAnalisis(NodoParrafo primerParrafo, int totalParrafos) {
+            this.primerParrafo = primerParrafo;
+            this.totalParrafos = totalParrafos;
             this.conteoGlobal = new HashMap<>();
-            this.totalNotas = parrafos.stream().mapToInt(List::size).sum();
+            this.totalNotas = 0;
 
-            for (Map<String, Integer> conteoParrafo : conteosParrafos) {
-                for (Map.Entry<String, Integer> entrada : conteoParrafo.entrySet()) {
+            // Calcular estadísticas globales recorriendo los nodos
+            NodoParrafo parrafoActual = primerParrafo;
+            while (parrafoActual != null) {
+                this.totalNotas += parrafoActual.totalNotas;
+
+                for (Map.Entry<String, Integer> entrada : parrafoActual.conteo.entrySet()) {
                     conteoGlobal.put(entrada.getKey(),
                             conteoGlobal.getOrDefault(entrada.getKey(), 0) + entrada.getValue());
                 }
+
+                parrafoActual = parrafoActual.siguiente;
             }
         }
 
-        public List<List<String>> getParrafos() {
-            return parrafos;
+        public NodoParrafo getPrimerParrafo() {
+            return primerParrafo;
         }
 
-        public List<Map<String, Integer>> getConteosParrafos() {
-            return conteosParrafos;
+        public int getTotalParrafos() {
+            return totalParrafos;
         }
 
         public Map<String, Integer> getConteoGlobal() {
