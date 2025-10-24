@@ -1,0 +1,4 @@
+# Ejemplo con Octavas
+LA' SOL' FA' MI' RE' DO'
+LA SOL FA MI RE DO
+LA'' SOL'' FA'' MI'' RE'' DO''

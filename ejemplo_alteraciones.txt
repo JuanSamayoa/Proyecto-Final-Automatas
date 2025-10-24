@@ -1,0 +1,4 @@
+# Ejemplo con Sostenidos y Bemoles
+DO# RE# MI FA SOL# LA SI
+DOb REb MIb FA SOLb LAb SIb
+DOs REs MI FA SOLs LA SI

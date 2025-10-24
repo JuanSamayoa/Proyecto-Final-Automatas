@@ -58,7 +58,7 @@ public class SistemaMusica extends javax.swing.JFrame {
         inicializarInterfaz();
         configurarEventosAccesibilidad();
 
-        setTitle("Sistema Musical - Transformando Texto en Melodia");
+        setTitle("Sistema Musical - Proyecto Final Automatas y Lenguajes Formales");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -84,7 +84,7 @@ public class SistemaMusica extends javax.swing.JFrame {
         areaResultados = new JTextArea();
         configurarAreaTexto();
         panelScroll = new JScrollPane(areaResultados);
-        panelScroll.setBorder(BorderFactory.createTitledBorder("Análisis Musical"));
+        panelScroll.setBorder(BorderFactory.createTitledBorder("Análisis Musical - Por Juan Samayoa"));
         add(panelScroll, BorderLayout.CENTER);
 
         // Inicializar etiqueta de estado
@@ -102,7 +102,6 @@ public class SistemaMusica extends javax.swing.JFrame {
 
         JLabel titulo = new JLabel("<html><center>" +
                 "<h2>Sistema Musical Accesible</h2>" +
-                "<p>Convierte partituras de texto en experiencias sonoras</p>" +
                 "</center></html>");
         titulo.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(titulo, BorderLayout.CENTER);
@@ -212,12 +211,8 @@ public class SistemaMusica extends javax.swing.JFrame {
     private void mostrarMensajeBienvenida() {
         String mensaje = "Bienvenido al Sistema Musical Accesible\n\n" +
                 "Este sistema convierte partituras de texto en musica.\n\n" +
-                "Caracteristicas:\n" +
-                "- Analisis sintactico con expresiones regulares\n" +
-                "- Generacion de audio en tiempo real\n" +
-                "- Conteo de notas por parrafo\n" +
-                "- Interfaz accesible con atajos de teclado\n\n" +
-                "Notas: DO, RE, MI, FA, SOL, LA, SI (con # y ')\n\n" +
+                "Notas: DO, RE, MI, FA, SOL, LA, SI (naturales, #/s para sostenidos, b para bemoles, ' para octavas)\n\n"
+                +
                 "Atajos: Ctrl+O (cargar), Ctrl+E (ejemplo), Escape (detener)\n\n" +
                 "Comienza cargando un archivo o usando el ejemplo.";
 
@@ -329,11 +324,15 @@ public class SistemaMusica extends javax.swing.JFrame {
     private void accionMostrarAyuda(ActionEvent evento) {
         String ayuda = "Sistema Musical Accesible - Guia de Uso\n\n" +
                 "Formato de partituras:\n" +
-                "Notas: DO, RE, MI, FA, SOL, LA, SI\n" +
-                "Sostenidos: nota#\n" +
-                "Octavas: nota'\n\n" +
-                "Ejemplo:\n" +
-                "sol sol sol re# fa fa fa re\n\n" +
+                "Notas naturales: DO, RE, MI, FA, SOL, LA, SI\n" +
+                "Sostenidos: nota# o notas\n" +
+                "Bemoles: notab\n" +
+                "Octavas: nota' (más aguda), nota'' (aún más aguda)\n\n" +
+                "Ejemplos:\n" +
+                "sol sol sol re# fa fa fa re\n" +
+                "do reb mib fa solb lab sib\n" +
+                "la' sol' fa' mi' re' do'\n" +
+                "dos res mis fa sols las sis\n\n" +
                 "Caracteristicas:\n" +
                 "- Expresiones regulares para analisis\n" +
                 "- Arboles sintacticos\n" +
@@ -580,7 +579,7 @@ public class SistemaMusica extends javax.swing.JFrame {
     private static class GramaticaMusical {
         // Expresión regular principal para reconocer notas musicales
         private final Pattern patronNota = Pattern.compile(
-                "\\b(DO|RE|MI|FA|SOL|LA|SI)([#']*)\\b",
+                "\\b(DO|RE|MI|FA|SOL|LA|SI)([#bs']*)\\b",
                 Pattern.CASE_INSENSITIVE);
 
         // Mapa de frecuencias para cada nota (en Hz)
@@ -593,21 +592,31 @@ public class SistemaMusica extends javax.swing.JFrame {
 
         /**
          * Inicializa las frecuencias base de las notas musicales en la octava media
+         * Incluye todas las variaciones: naturales, sostenidas (#/s) y bemoles (b)
          */
         private void inicializarFrecuencias() {
-            // Octava media (4ta octava)
+            // Octava media (4ta octava) - Notas naturales
             frecuenciasBase.put("DO", 261.63);
-            frecuenciasBase.put("DO#", 277.18);
             frecuenciasBase.put("RE", 293.66);
-            frecuenciasBase.put("RE#", 311.13);
             frecuenciasBase.put("MI", 329.63);
             frecuenciasBase.put("FA", 349.23);
-            frecuenciasBase.put("FA#", 369.99);
             frecuenciasBase.put("SOL", 392.00);
-            frecuenciasBase.put("SOL#", 415.30);
             frecuenciasBase.put("LA", 440.00);
-            frecuenciasBase.put("LA#", 466.16);
             frecuenciasBase.put("SI", 493.88);
+
+            // Sostenidos con # y s
+            frecuenciasBase.put("DO#", 277.18);
+            frecuenciasBase.put("RE#", 311.13);
+            frecuenciasBase.put("FA#", 369.99);
+            frecuenciasBase.put("SOL#", 415.30);
+            frecuenciasBase.put("LA#", 466.16);
+
+            // Bemoles (equivalentes a sostenidos de la nota anterior)
+            frecuenciasBase.put("REb", 277.18); // = DO#/DOs
+            frecuenciasBase.put("MIb", 311.13); // = RE#/REs
+            frecuenciasBase.put("SOLb", 369.99); // = FA#/FAs
+            frecuenciasBase.put("LAb", 415.30); // = SOL#/SOLs
+            frecuenciasBase.put("SIb", 466.16); // = LA#/LAs
         }
 
         public Pattern getPatronNota() {
@@ -616,7 +625,7 @@ public class SistemaMusica extends javax.swing.JFrame {
 
         public double obtenerFrecuencia(String nota) {
             String notaLimpia = nota.toUpperCase();
-            String notaBase = notaLimpia.replaceAll("['']", "");
+            String notaBase = notaLimpia.replaceAll("['#bs]", "");
 
             Double frecuenciaBase = frecuenciasBase.get(notaBase);
             if (frecuenciaBase == null)
@@ -670,7 +679,7 @@ public class SistemaMusica extends javax.swing.JFrame {
             }
 
             // Contar por tipo de nota (sin modificadores)
-            String notaBase = nota.replaceAll("['#]", "");
+            String notaBase = nota.replaceAll("['#b]", "");
             conteo.put(notaBase, conteo.getOrDefault(notaBase, 0) + 1);
             totalNotas++;
         }

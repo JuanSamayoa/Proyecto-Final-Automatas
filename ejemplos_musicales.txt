@@ -1,0 +1,32 @@
+# Ejemplos de Partituras Musicales para Probar el Sistema
+
+## 1. Estrellita (Twinkle Twinkle Little Star)
+DO DO SOL SOL LA LA SOL
+FA FA MI MI RE RE DO
+SOL SOL FA FA MI MI RE
+SOL SOL FA FA MI MI RE
+DO DO SOL SOL LA LA SOL
+FA FA MI MI RE RE DO
+
+## 2. Cumpleaños Feliz (Happy Birthday)
+DO DO RE DO FA MI
+DO DO RE DO SOL FA
+DO DO DO' LA FA MI RE
+SI SI LA FA SOL FA
+
+## 3. Oda a la Alegría (Ode to Joy - Beethoven)
+MI MI FA SOL SOL FA MI
+RE RE MI MI MI RE RE
+MI MI FA SOL SOL FA MI
+RE RE MI MI RE RE MI
+MI RE RE MI MI RE RE
+
+## 4. Ejemplo con Sostenidos y Bemoles
+DO# RE# MI FA SOL# LA SI
+DOb REb MIb FA SOLb LAb SIb
+DOs REs MI FA SOLs LA SI
+
+## 5. Ejemplo con Octavas
+LA' SOL' FA' MI' RE' DO'
+LA SOL FA MI RE DO
+LA'' SOL'' FA'' MI'' RE'' DO''
