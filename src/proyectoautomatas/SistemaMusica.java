@@ -567,8 +567,6 @@ public class SistemaMusica extends javax.swing.JFrame {
         lblEstado.setText(mensaje);
     }
 
-    // CLASES INTERNAS PARA EL MOTOR MUSICAL
-
     /**
      * Maneja las reglas gramaticales para el análisis de notas musicales
      */
@@ -595,7 +593,6 @@ public class SistemaMusica extends javax.swing.JFrame {
          * Incluye todas las variaciones: naturales, sostenidas (#/s) y bemoles (b)
          */
         private void inicializarFrecuencias() {
-            // Octava media (4ta octava) - Notas naturales
             frecuenciasBase.put("DO", 261.63);
             frecuenciasBase.put("RE", 293.66);
             frecuenciasBase.put("MI", 329.63);

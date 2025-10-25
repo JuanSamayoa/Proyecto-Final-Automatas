@@ -1,4 +1,5 @@
 sol sol sol re# fa fa fa re
+do# do# do# do# do# do# do#
 sol sol sol re# sol# sol# sol# sol
 re#' re#' re#' do'
 sol sol sol re sol# sol# sol# sol
